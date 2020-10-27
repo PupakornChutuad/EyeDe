@@ -12,6 +12,10 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 import time
 
+# import eye_detection_03
+# import win32api
+
+
 threadPool = QtCore.QThreadPool()
 
 
@@ -23,19 +27,28 @@ class MainWindow():
         self.ui.setupUi(self.qMainWindow)
 
         self.ui.ViewHisButton_2.clicked.connect(self.countdown)
-        self.ui.ViewHisButton_2.clicked.connect(self.countup)
-        print("BELLO")
+
+        # self.ui.ViewHisButton_2.clicked.connect(self.countup)
+        self.ui.ViewHisButton_3.clicked.connect(self.stoptime)
+        self.count_up = None
 
     # timefuction
     def countdown(self):
-        countWorker = CountdownWorker(self.ui.Countdowner, 5)
+        self.countdown_args = {
+            'is_start': True
+        }
+        countWorker = CountdownWorker(self.ui.Countdowner, 5, self.countdown_args)
         threadPool.start(countWorker)
-        print("AELLO")
+        if (self.count_up == None) :
+            self.count_up = CountUpWorker(self.ui.TimerCock, 1)
+            threadPool.start(self.count_up)
 
-    def countup(self):
-        count_up = CountUpWorker(self.ui.TimerCock, 1)
-        threadPool.start(count_up)
-        print("CELLO")
+    # def countup(self):
+    #     count_up = CountUpWorker(self.ui.TimerCock, 1)
+    #     threadPool.start(count_up)
+
+    def stoptime(self):
+        self.countdown_args['is_start'] = False
 
 
 class Ui_MainWindow(object):
@@ -181,7 +194,7 @@ class Ui_MainWindow(object):
         self.label_5.setText(_translate("MainWindow", "นาที"))
         self.label_6.setText(_translate("MainWindow", "นาที"))
         self.label_8.setText(_translate("MainWindow", "Face Position:"))
-        self.FacePosi.setText(_translate("MainWindow", "CENTER"))
+        self.FacePosi.setText(_translate("MainWindow", "OFFLINE"))
         self.ViewHisButton_2.setText(_translate("MainWindow", "เริ่ม"))
         self.ViewHisButton_3.setText(_translate("MainWindow", "หยุด"))
         self.ViewHisButton.setText(_translate("MainWindow", "ดูสถิติ"))
@@ -190,27 +203,28 @@ class Ui_MainWindow(object):
 
 class CountdownWorker(QtCore.QRunnable):
 
-    def __init__(self, CountDowner, countdown_time, *args, **kwargs):
+    def __init__(self, CountDowner, countdown_time, countdown_args, *args, **kwargs):
         super(CountdownWorker, self).__init__()
 
         self.Countdowner = CountDowner
         self.countdown_time = countdown_time
+        self.countdown_args = countdown_args
 
     def run(self) -> None:
-        while self.countdown_time:
+        while self.countdown_time and self.countdown_args['is_start']:
             mins, secs = divmod(self.countdown_time, 60)
             hour, mins = divmod(mins, 60)
             timer = '{:02d}:{:02d}:{:02d}'.format(hour, mins, secs)
             self.Countdowner.setText(timer)
             time.sleep(1)
             self.countdown_time -= 1
+            print(self.countdown_time)
 
         print("HELL", self.countdown_time)
         mins, secs = divmod(self.countdown_time, 60)
         timer = '{:02d}:{:02d}:{:02d}'.format(hour, mins, secs)
-        print("O")
-
         self.Countdowner.setText(timer)
+        # win32api.MessageBox(None, 'hello', 'title')
 
 
 class CountUpWorker(QtCore.QRunnable):
@@ -232,6 +246,14 @@ class CountUpWorker(QtCore.QRunnable):
 
         self.TimerCock.setText(timerup)
         print("EELLO")
+
+
+class BreakTime(QtCore.QRunnable):
+    print("BELLO")
+    # def stop_time(self):
+    #     self.timer.stop()
+    #
+    #     print("LELLO")
 
 
 if __name__ == "__main__":
